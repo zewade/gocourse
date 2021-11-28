@@ -1,12 +1,17 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"fmt"
+	"github.com/golang/glog"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -16,8 +21,33 @@ const (
 )
 
 func main() {
-	http.HandleFunc("/", handleRequest)
-	log.Panic(http.ListenAndServe(":8080", nil))
+	flag.Set("v", "4")
+	glog.V(2).Info("Starting http server...")
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handleRequest)
+	srv := http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+	log.Printf("Server Started")
+	<-done
+	log.Printf("Server stopped")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer func() {
+		//extra handling
+		cancel()
+	}()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server shutdown Failed:%+v", err)
+	}
+	log.Print("Server Exited Properly")
 }
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
