@@ -68,3 +68,11 @@ nsenter -n -t 12850 ip a
 可以考虑的细节 
 * 如何确保整个应用的高可用
 * 如何通过证书保证 httpServer 的通讯安全
+
+## 模块十作业
+
+* 为 HTTPServer 添加 0-2 秒的随机延时
+* 为 HTTPServer 项目添加延时 Metric
+* 将 HTTPServer 部署至测试集群，并完成 Prometheus 配置
+* 从 Promethus 界面中查询延时指标数据
+* （可选）创建一个 Grafana Dashboard 展现延时分配情况

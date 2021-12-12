@@ -5,14 +5,18 @@ import (
 	"flag"
 	"fmt"
 	"github.com/golang/glog"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"httpserver/metrics"
 )
 
 const (
@@ -23,8 +27,14 @@ const (
 func main() {
 	flag.Set("v", "4")
 	glog.V(2).Info("Starting http server...")
+	//注册metrics
+	metrics.Register()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handleRequest)
+	//发布metrics
+	mux.Handle("/metrics", promhttp.Handler())
+
 	srv := http.Server{
 		Addr:    ":8080",
 		Handler: mux,
@@ -79,8 +89,21 @@ func healthz(w http.ResponseWriter, r *http.Request) int {
 }
 
 func helloGolang(w http.ResponseWriter, r *http.Request) int {
+	glog.V(4).Info("entering hello Golang handler")
+	//设置延时
+	timer := metrics.NewTimer()
+	defer timer.ObserveTotal()
+	delay := randInt(10, 2000)
+	time.Sleep(time.Millisecond * time.Duration(delay))
+
 	io.WriteString(w, "Hello, Golang!")
+	glog.V(4).Infof("Respond in %d ms", delay)
 	return http.StatusOK
+}
+
+func randInt(min int, max int) int {
+	rand.Seed(time.Now().UTC().UnixNano())
+	return min + rand.Intn(max-min)
 }
 
 func getClientIP(r *http.Request) string {

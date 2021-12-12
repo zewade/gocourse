@@ -9,13 +9,16 @@ spec:
       app: httpserver
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
       labels:
         app: httpserver
     spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: httpserver
-          image: wadedc/httpserver:v1.1
+          image: wadedc/httpserver:v1.2
           env:
             - name: VERSION
               valueFrom:
