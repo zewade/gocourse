@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -25,6 +26,12 @@ const (
 )
 
 func main() {
+	//指定端口
+	addr := ":8080"
+	if len(os.Args) > 1 {
+		addr = os.Args[1]
+	}
+
 	flag.Set("v", "4")
 	glog.V(2).Info("Starting http server...")
 	//注册metrics
@@ -36,7 +43,7 @@ func main() {
 	mux.Handle("/metrics", promhttp.Handler())
 
 	srv := http.Server{
-		Addr:    ":8080",
+		Addr:    addr,
 		Handler: mux,
 	}
 	done := make(chan os.Signal, 1)
@@ -73,6 +80,12 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	var statusCode int
 	if r.URL.Path == "/hello/golang" {
 		statusCode = helloGolang(w, r)
+	} else if r.URL.Path == "/hello/service1" {
+		statusCode = helloService(w, r, "service1")
+	} else if r.URL.Path == "/hello/service2" {
+		statusCode = helloService(w, r, "service2")
+	} else if r.URL.Path == "/hello/service3" {
+		statusCode = helloService(w, r, "service3")
 	} else if r.URL.Path == "/healthz" {
 		statusCode = healthz(w, r)
 	} else {
@@ -119,4 +132,55 @@ func getClientIP(r *http.Request) string {
 		remoteAddr = "127.0.0.1"
 	}
 	return remoteAddr
+}
+
+func helloService(w http.ResponseWriter, r *http.Request, svc string) int {
+	glog.V(4).Info("entering hello service1 handler")
+	//设置延时
+	timer := metrics.NewTimer()
+	defer timer.ObserveTotal()
+	delay := randInt(10, 2000)
+	time.Sleep(time.Millisecond * time.Duration(delay))
+
+	var req *http.Request
+	var err error
+	if svc == "service1" {
+		io.WriteString(w, "Hello, Service1!\n")
+		req, err = http.NewRequest("GET", "http://localhost:8081/hello/service2", nil)
+		//req, err = http.NewRequest("GET", "http://httpserver-svc2/hello/service2", nil)
+		if err != nil {
+			fmt.Printf("%s", err)
+		}
+	} else if svc == "service2" {
+		io.WriteString(w, "Hello, Service2!\n")
+		req, err = http.NewRequest("GET", "http://localhost:8082/hello/service3", nil)
+		//req, err = http.NewRequest("GET", "http://httpserver-svc3/hello/service3", nil)
+		if err != nil {
+			fmt.Printf("%s", err)
+		}
+	} else {
+		io.WriteString(w, "Hello, Service3!\n")
+		for k, v := range r.Header {
+			io.WriteString(w, fmt.Sprintf("%s=%s\n", k, v))
+		}
+		glog.V(4).Infof("Respond in %d ms", delay)
+		return http.StatusOK
+	}
+	lowerCaseHeader := make(http.Header)
+	for key, value := range r.Header {
+		lowerCaseHeader[strings.ToLower(key)] = value
+	}
+	glog.Info("headers:", lowerCaseHeader)
+	req.Header = lowerCaseHeader
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		glog.Info("HTTP get failed with error: ", "error", err)
+	} else {
+		glog.Info("HTTP get succeeded")
+	}
+	resp.Write(w)
+
+	glog.V(4).Infof("Respond in %d ms", delay)
+	return http.StatusOK
 }
