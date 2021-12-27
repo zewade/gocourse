@@ -33,6 +33,7 @@ func main() {
 	}
 
 	flag.Set("v", "4")
+	//flag.Parse()
 	glog.V(2).Info("Starting http server...")
 	//注册metrics
 	metrics.Register()
@@ -161,7 +162,9 @@ func helloService(w http.ResponseWriter, r *http.Request, svc string) int {
 	} else {
 		io.WriteString(w, "Hello, Service3!\n")
 		for k, v := range r.Header {
-			io.WriteString(w, fmt.Sprintf("%s=%s\n", k, v))
+			for _, h := range v {
+				io.WriteString(w, fmt.Sprintf("%s: %s\n", k, h))
+			}
 		}
 		glog.V(4).Infof("Respond in %d ms", delay)
 		return http.StatusOK
