@@ -88,3 +88,7 @@ fabric.properties
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+.idea/gocourse.iml
+httpserver/bin/amd64/httpserver
+httpserver/go.sum
+httpserver/httpserver
