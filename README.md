@@ -76,3 +76,10 @@ nsenter -n -t 12850 ip a
 * 将 HTTPServer 部署至测试集群，并完成 Prometheus 配置
 * 从 Promethus 界面中查询延时指标数据
 * （可选）创建一个 Grafana Dashboard 展现延时分配情况
+
+## 模块十二作业
+
+把我们的 httpserver 服务以 Istio Ingress Gateway 的形式发布出来。以下是你需要考虑的几点：
+* 如何实现安全保证；
+* 七层路由规则；
+* 考虑 open tracing 的接入。
