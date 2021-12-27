@@ -25,15 +25,12 @@ const (
 	XRealIP       = "X-Real-IP"
 )
 
+//glog输出到控制台的启动参数 -v=4 -logtostderr
 func main() {
 	//指定端口
-	addr := ":8080"
-	if len(os.Args) > 1 {
-		addr = os.Args[1]
-	}
+	addr := flag.String("addr", ":8080", "Server Address.")
+	flag.Parse()
 
-	flag.Set("v", "4")
-	//flag.Parse()
 	glog.V(2).Info("Starting http server...")
 	//注册metrics
 	metrics.Register()
@@ -44,7 +41,7 @@ func main() {
 	mux.Handle("/metrics", promhttp.Handler())
 
 	srv := http.Server{
-		Addr:    addr,
+		Addr:    *addr,
 		Handler: mux,
 	}
 	done := make(chan os.Signal, 1)
