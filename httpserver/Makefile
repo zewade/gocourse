@@ -1,4 +1,4 @@
-export tag=v1.2
+export tag=v1.3.2
 root:
 	export ROOT=github.com/zewade/gocourse
 

@@ -145,14 +145,14 @@ func helloService(w http.ResponseWriter, r *http.Request, svc string) int {
 	if svc == "service1" {
 		io.WriteString(w, "Hello, Service1!\n")
 		//req, err = http.NewRequest("GET", "http://localhost:8081/hello/service2", nil)
-		req, err = http.NewRequest("GET", "http://httpserver-svc2/hello/service2", nil)
+		req, err = http.NewRequest("GET", "http://httpserver-service2/hello/service2", nil)
 		if err != nil {
 			fmt.Printf("%s", err)
 		}
 	} else if svc == "service2" {
 		io.WriteString(w, "Hello, Service2!\n")
 		//req, err = http.NewRequest("GET", "http://localhost:8082/hello/service3", nil)
-		req, err = http.NewRequest("GET", "http://httpserver-svc3/hello/service3", nil)
+		req, err = http.NewRequest("GET", "http://httpserver-service3/hello/service3", nil)
 		if err != nil {
 			fmt.Printf("%s", err)
 		}
